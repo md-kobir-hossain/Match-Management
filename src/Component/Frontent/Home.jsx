@@ -22,6 +22,7 @@ const LoadingScreen = ({ isLoading }) => {
         alignItems: "center",
         zIndex: 9999,
         transition: "opacity 0.5s ease-out",
+        padding: "0 20px",
       }}
     >
       <div
@@ -41,6 +42,7 @@ const LoadingScreen = ({ isLoading }) => {
           fontSize: "1.2rem",
           fontWeight: "600",
           animation: "pulse 2s ease-in-out infinite",
+          textAlign: "center",
         }}
       >
         Loading Kobitar House...
@@ -124,7 +126,8 @@ const CustomDropdown = ({ title, items, isOpen, toggleOpen }) => {
           padding: "0.5rem 1rem",
           cursor: "pointer",
           transition: "all 0.3s ease",
-          fontSize: "1rem",
+          fontSize: "0.9rem",
+          whiteSpace: "nowrap",
         }}
         onMouseEnter={(e) => {
           e.target.style.color = "#667eea";
@@ -143,9 +146,10 @@ const CustomDropdown = ({ title, items, isOpen, toggleOpen }) => {
           style={{
             position: "absolute",
             top: "100%",
-            left: 0,
+            right: 0,
             background: "white",
             minWidth: "200px",
+            maxWidth: "250px",
             boxShadow: "0 10px 40px rgba(0, 0, 0, 0.15)",
             borderRadius: "10px",
             padding: "10px 0",
@@ -184,13 +188,29 @@ const CustomDropdown = ({ title, items, isOpen, toggleOpen }) => {
 const Header = ({ activeLink, handleNavClick, members }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      if (window.innerWidth > 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   const navStyle = {
@@ -208,12 +228,12 @@ const Header = ({ activeLink, handleNavClick, members }) => {
       ? "0 4px 30px rgba(0, 0, 0, 0.15)"
       : "0 2px 20px rgba(0, 0, 0, 0.1)",
     zIndex: 1000,
-    padding: "1rem 0",
+    padding: isMobile ? "0.8rem 0" : "1rem 0",
   };
 
   const brandStyle = {
     fontWeight: "700",
-    fontSize: "1.8rem",
+    fontSize: isMobile ? "1.4rem" : "1.8rem",
     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     WebkitBackgroundClip: "text",
     WebkitTextFillColor: "transparent",
@@ -229,7 +249,23 @@ const Header = ({ activeLink, handleNavClick, members }) => {
     position: "relative",
     padding: "0.5rem 1rem",
     textDecoration: "none",
-    margin: "0 0.5rem",
+    margin: isMobile ? "0.5rem 0" : "0 0.25rem",
+    display: "block",
+    fontSize: isMobile ? "1rem" : "0.95rem",
+  };
+
+  const mobileMenuStyle = {
+    display: isMobile && isMobileMenuOpen ? "flex" : "none",
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    right: 0,
+    background: "rgba(255, 255, 255, 0.98)",
+    backdropFilter: "blur(20px)",
+    flexDirection: "column",
+    padding: "1rem",
+    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
+    borderTop: "1px solid rgba(0, 0, 0, 0.1)",
   };
 
   return (
@@ -279,6 +315,30 @@ const Header = ({ activeLink, handleNavClick, members }) => {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 2px;
           }
+
+          .mobile-menu-toggle {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+          }
+
+          .mobile-menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background: #2d3748;
+            margin: 2px 0;
+            transition: 0.3s;
+          }
+
+          @media (max-width: 768px) {
+            .mobile-menu-toggle {
+              display: flex;
+            }
+          }
         `}
       </style>
       <nav style={navStyle}>
@@ -290,13 +350,21 @@ const Header = ({ activeLink, handleNavClick, members }) => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            position: "relative",
           }}
         >
           <a href="#home" style={brandStyle}>
             ⭐ Kobitar House
           </a>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          {/* Desktop Navigation */}
+          <div
+            style={{
+              display: isMobile ? "none" : "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
             <a
               href="#home"
               onClick={() => handleNavClick("home")}
@@ -367,6 +435,74 @@ const Header = ({ activeLink, handleNavClick, members }) => {
               toggleOpen={() => setIsDropdownOpen(!isDropdownOpen)}
             />
           </div>
+
+          {/* Mobile Menu Toggle */}
+          <div
+            className="mobile-menu-toggle"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            style={{ display: isMobile ? "flex" : "none" }}
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          {/* Mobile Navigation */}
+          <div style={mobileMenuStyle}>
+            <a
+              href="#home"
+              onClick={() => {
+                handleNavClick("home");
+                setIsMobileMenuOpen(false);
+              }}
+              style={{
+                ...navLinkStyle,
+                color: activeLink === "home" ? "#667eea" : "#2d3748",
+                textAlign: "center",
+              }}
+            >
+              Home
+            </a>
+
+            <a
+              href="#content"
+              onClick={() => {
+                handleNavClick("content");
+                setIsMobileMenuOpen(false);
+              }}
+              style={{
+                ...navLinkStyle,
+                color: activeLink === "content" ? "#667eea" : "#2d3748",
+                textAlign: "center",
+              }}
+            >
+              Dashboard
+            </a>
+
+            <a
+              href="#shopping"
+              onClick={() => {
+                handleNavClick("shopping");
+                setIsMobileMenuOpen(false);
+              }}
+              style={{
+                ...navLinkStyle,
+                color: activeLink === "shopping" ? "#667eea" : "#2d3748",
+                textAlign: "center",
+              }}
+            >
+              Shopping
+            </a>
+
+            <div style={{ padding: "1rem 0", textAlign: "center" }}>
+              <CustomDropdown
+                title="👥 Members"
+                items={members}
+                isOpen={isDropdownOpen}
+                toggleOpen={() => setIsDropdownOpen(!isDropdownOpen)}
+              />
+            </div>
+          </div>
         </div>
       </nav>
     </header>
@@ -380,6 +516,7 @@ const Home = () => {
   const [expenses, setExpenses] = useState([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isAppLoading, setIsAppLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   const members = [
     "Labib",
@@ -419,6 +556,13 @@ const Home = () => {
   };
 
   useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
     const loadAllData = async () => {
       setIsLoadingData(true);
       await Promise.all([loadData(), fetchExpenses()]);
@@ -432,7 +576,10 @@ const Home = () => {
       setIsAppLoading(false);
     }, 2500);
 
-    return () => clearTimeout(appLoadTimer);
+    return () => {
+      clearTimeout(appLoadTimer);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   // Scroll animation effect
@@ -489,45 +636,48 @@ const Home = () => {
 
   // Common styles
   const sectionStyle = {
-    padding: "100px 0",
-    minHeight: "100vh",
+    padding: isMobile ? "60px 0" : "100px 0",
+    minHeight: isMobile ? "auto" : "100vh",
   };
 
   const containerStyle = {
     maxWidth: "1200px",
     margin: "0 auto",
-    padding: "0 20px",
+    padding: isMobile ? "0 15px" : "0 20px",
   };
 
   const cardStyle = {
     background: "white",
-    borderRadius: "20px",
-    padding: "30px",
+    borderRadius: isMobile ? "15px" : "20px",
+    padding: isMobile ? "20px" : "30px",
     boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)",
     transition: "all 0.3s ease",
     border: "1px solid rgba(255, 255, 255, 0.2)",
     backdropFilter: "blur(20px)",
-    marginBottom: "30px",
+    marginBottom: isMobile ? "20px" : "30px",
   };
 
   const tableStyle = {
     width: "100%",
     borderCollapse: "collapse",
     marginTop: "15px",
+    fontSize: isMobile ? "0.85rem" : "1rem",
   };
 
   const thStyle = {
-    padding: "12px",
+    padding: isMobile ? "8px" : "12px",
     textAlign: "left",
     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     color: "white",
     fontWeight: "600",
+    fontSize: isMobile ? "0.8rem" : "1rem",
   };
 
   const tdStyle = {
-    padding: "12px",
+    padding: isMobile ? "8px" : "12px",
     textAlign: "left",
     borderBottom: "1px solid #e2e8f0",
+    fontSize: isMobile ? "0.85rem" : "1rem",
   };
 
   return (
@@ -568,26 +718,28 @@ const Home = () => {
             zIndex: 10,
             textAlign: "center",
             color: "white",
-            padding: "0 20px",
+            padding: isMobile ? "0 15px" : "0 20px",
           }}
         >
           <h1
             style={{
-              fontSize: "4rem",
+              fontSize: isMobile ? "2.5rem" : "4rem",
               fontWeight: "800",
               marginBottom: "1rem",
               textShadow: "2px 2px 20px rgba(0, 0, 0, 0.5)",
               animation: "fadeInUp 1s ease-out 0.5s both",
+              lineHeight: isMobile ? "1.2" : "1.1",
             }}
           >
             Welcome to Kobitar House
           </h1>
           <p
             style={{
-              fontSize: "1.5rem",
+              fontSize: isMobile ? "1.1rem" : "1.5rem",
               opacity: "0.9",
               marginBottom: "2rem",
               animation: "fadeInUp 1s ease-out 1s both",
+              lineHeight: "1.4",
             }}
           >
             Your Premium Financial Management Dashboard
@@ -595,7 +747,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Content Section */}
+      {/* Shopping Section */}
       <section
         id="content"
         style={{
@@ -606,26 +758,31 @@ const Home = () => {
         <div style={containerStyle}>
           <div
             className="fade-in"
-            style={{ textAlign: "center", marginBottom: "60px" }}
+            style={{
+              textAlign: "center",
+              marginBottom: isMobile ? "40px" : "60px",
+            }}
           >
             <h1
               style={{
-                fontSize: "3rem",
+                fontSize: isMobile ? "2.2rem" : "3rem",
                 fontWeight: "800",
                 background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
                 marginBottom: "1rem",
+                lineHeight: "1.2",
               }}
             >
               💰 Expense Tracker
             </h1>
             <p
               style={{
-                fontSize: "1.2rem",
+                fontSize: isMobile ? "1rem" : "1.2rem",
                 color: "#64748b",
                 fontWeight: "500",
+                lineHeight: "1.4",
               }}
             >
               Professional Group Financial Management
@@ -635,9 +792,11 @@ const Home = () => {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
-              gap: "30px",
-              marginBottom: "40px",
+              gridTemplateColumns: isMobile
+                ? "1fr"
+                : "repeat(auto-fit, minmax(350px, 1fr))",
+              gap: isMobile ? "20px" : "30px",
+              marginBottom: isMobile ? "30px" : "40px",
             }}
           >
             {/* Amount Collected Card */}
@@ -645,14 +804,18 @@ const Home = () => {
               className="fade-in"
               style={cardStyle}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-10px)";
-                e.currentTarget.style.boxShadow =
-                  "0 20px 60px rgba(0, 0, 0, 0.15)";
+                if (!isMobile) {
+                  e.currentTarget.style.transform = "translateY(-10px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 20px 60px rgba(0, 0, 0, 0.15)";
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 10px 40px rgba(0, 0, 0, 0.1)";
+                if (!isMobile) {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 10px 40px rgba(0, 0, 0, 0.1)";
+                }
               }}
             >
               <div
@@ -662,12 +825,22 @@ const Home = () => {
                   marginBottom: "20px",
                   paddingBottom: "15px",
                   borderBottom: "2px solid #f1f5f9",
+                  flexDirection: isMobile ? "column" : "row",
+                  textAlign: isMobile ? "center" : "left",
                 }}
               >
-                <div style={{ fontSize: "2rem", marginRight: "15px" }}>💵</div>
+                <div
+                  style={{
+                    fontSize: isMobile ? "1.8rem" : "2rem",
+                    marginRight: isMobile ? "0" : "15px",
+                    marginBottom: isMobile ? "10px" : "0",
+                  }}
+                >
+                  💵
+                </div>
                 <h3
                   style={{
-                    fontSize: "1.5rem",
+                    fontSize: isMobile ? "1.3rem" : "1.5rem",
                     fontWeight: "700",
                     color: "#1e293b",
                     margin: 0,
@@ -678,7 +851,7 @@ const Home = () => {
               </div>
               <div
                 style={{
-                  fontSize: "2.5rem",
+                  fontSize: isMobile ? "2rem" : "2.5rem",
                   fontWeight: "800",
                   color: "#059669",
                   marginBottom: "20px",
@@ -687,24 +860,26 @@ const Home = () => {
               >
                 ৳{totalCollected.toLocaleString()}
               </div>
-              <table style={tableStyle}>
-                <thead>
-                  <tr>
-                    <th style={thStyle}>Name</th>
-                    <th style={thStyle}>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.map((row, idx) => (
-                    <tr key={idx} style={{ transition: "all 0.3s ease" }}>
-                      <td style={tdStyle}>{row.Name}</td>
-                      <td style={tdStyle}>
-                        ৳{Number(row.Amount || 0).toLocaleString()}
-                      </td>
+              <div style={{ overflowX: "auto" }}>
+                <table style={tableStyle}>
+                  <thead>
+                    <tr>
+                      <th style={thStyle}>Name</th>
+                      <th style={thStyle}>Amount</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {data.map((row, idx) => (
+                      <tr key={idx} style={{ transition: "all 0.3s ease" }}>
+                        <td style={tdStyle}>{row.Name}</td>
+                        <td style={tdStyle}>
+                          ৳{Number(row.Amount || 0).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Expenses Card */}
@@ -712,14 +887,18 @@ const Home = () => {
               className="fade-in"
               style={cardStyle}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-10px)";
-                e.currentTarget.style.boxShadow =
-                  "0 20px 60px rgba(0, 0, 0, 0.15)";
+                if (!isMobile) {
+                  e.currentTarget.style.transform = "translateY(-10px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 20px 60px rgba(0, 0, 0, 0.15)";
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 10px 40px rgba(0, 0, 0, 0.1)";
+                if (!isMobile) {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow =
+                    "0 10px 40px rgba(0, 0, 0, 0.1)";
+                }
               }}
             >
               <div
@@ -729,12 +908,22 @@ const Home = () => {
                   marginBottom: "20px",
                   paddingBottom: "15px",
                   borderBottom: "2px solid #f1f5f9",
+                  flexDirection: isMobile ? "column" : "row",
+                  textAlign: isMobile ? "center" : "left",
                 }}
               >
-                <div style={{ fontSize: "2rem", marginRight: "15px" }}>🛒</div>
+                <div
+                  style={{
+                    fontSize: isMobile ? "1.8rem" : "2rem",
+                    marginRight: isMobile ? "0" : "15px",
+                    marginBottom: isMobile ? "10px" : "0",
+                  }}
+                >
+                  🛒
+                </div>
                 <h3
                   style={{
-                    fontSize: "1.5rem",
+                    fontSize: isMobile ? "1.3rem" : "1.5rem",
                     fontWeight: "700",
                     color: "#1e293b",
                     margin: 0,
@@ -756,23 +945,15 @@ const Home = () => {
                       margin: "0 auto 20px",
                     }}
                   ></div>
-                  <p>Loading expenses...</p>
+                  <p style={{ color: "#64748b", fontSize: "0.9rem" }}>
+                    Loading expenses data...
+                  </p>
                 </div>
-              ) : expenses.length === 0 ? (
-                <p
-                  style={{
-                    textAlign: "center",
-                    padding: "40px",
-                    color: "#64748b",
-                  }}
-                >
-                  No expenses recorded yet.
-                </p>
               ) : (
                 <>
                   <div
                     style={{
-                      fontSize: "2.5rem",
+                      fontSize: isMobile ? "2rem" : "2.5rem",
                       fontWeight: "800",
                       color: "#dc2626",
                       marginBottom: "20px",
@@ -781,252 +962,193 @@ const Home = () => {
                   >
                     ৳{totalSpent.toLocaleString()}
                   </div>
-                  <table style={tableStyle}>
-                    <thead>
-                      <tr>
-                        <th style={thStyle}>Item</th>
-                        <th style={thStyle}>Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {expenses.map((expense, index) => (
-                        <tr key={index} style={{ transition: "all 0.3s ease" }}>
-                          <td style={tdStyle}>{expense.Name}</td>
-                          <td style={tdStyle}>
-                            ৳{parseFloat(expense.Amount).toLocaleString()}
-                          </td>
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={tableStyle}>
+                      <thead>
+                        <tr>
+                          <th style={thStyle}>Date</th>
+                          <th style={thStyle}>Item</th>
+                          <th style={thStyle}>Amount</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {expenses.map((expense, idx) => (
+                          <tr key={idx} style={{ transition: "all 0.3s ease" }}>
+                            <td style={tdStyle}>
+                              {new Date(expense.Date).toLocaleDateString()}
+                            </td>
+                            <td style={tdStyle}>{expense.Item}</td>
+                            <td style={tdStyle}>
+                              ৳
+                              {parseFloat(expense.Amount || 0).toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </>
               )}
             </div>
           </div>
 
-          {/* Financial Summary */}
+          {/* Financial Summary Card */}
           <div
             className="fade-in"
             style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              color: "white",
-              borderRadius: "20px",
-              padding: "40px",
-              marginTop: "40px",
-              boxShadow: "0 20px 60px rgba(102, 126, 234, 0.4)",
+              ...cardStyle,
+              gridColumn: isMobile ? "auto" : "1 / -1",
+            }}
+            onMouseEnter={(e) => {
+              if (!isMobile) {
+                e.currentTarget.style.transform = "translateY(-10px)";
+                e.currentTarget.style.boxShadow =
+                  "0 20px 60px rgba(0, 0, 0, 0.15)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isMobile) {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow =
+                  "0 10px 40px rgba(0, 0, 0, 0.1)";
+              }
             }}
           >
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                marginBottom: "30px",
+                marginBottom: "20px",
                 paddingBottom: "15px",
-                borderBottom: "2px solid rgba(255, 255, 255, 0.2)",
+                borderBottom: "2px solid #f1f5f9",
+                flexDirection: isMobile ? "column" : "row",
+                textAlign: isMobile ? "center" : "left",
               }}
             >
-              <div style={{ fontSize: "2rem", marginRight: "15px" }}>📊</div>
+              <div
+                style={{
+                  fontSize: isMobile ? "1.8rem" : "2rem",
+                  marginRight: isMobile ? "0" : "15px",
+                  marginBottom: isMobile ? "10px" : "0",
+                }}
+              >
+                📊
+              </div>
               <h3
                 style={{
-                  fontSize: "1.5rem",
+                  fontSize: isMobile ? "1.3rem" : "1.5rem",
                   fontWeight: "700",
+                  color: "#1e293b",
                   margin: 0,
                 }}
               >
                 Financial Summary
               </h3>
             </div>
+
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: "20px",
+                gridTemplateColumns: isMobile
+                  ? "1fr"
+                  : "repeat(auto-fit, minmax(250px, 1fr))",
+                gap: isMobile ? "15px" : "20px",
               }}
             >
               <div
                 style={{
-                  textAlign: "center",
                   padding: "20px",
-                  background: "rgba(255, 255, 255, 0.1)",
-                  borderRadius: "15px",
-                  backdropFilter: "blur(20px)",
+                  background: "#f8fafc",
+                  borderRadius: "12px",
+                  textAlign: "center",
                 }}
               >
-                <div
-                  style={{
-                    fontSize: "0.9rem",
-                    opacity: "0.8",
-                    marginBottom: "8px",
-                  }}
-                >
+                <div style={{ fontSize: "2rem", marginBottom: "10px" }}>💰</div>
+                <h4 style={{ margin: "0 0 10px 0", color: "#374151" }}>
                   Total Collected
-                </div>
-                <div style={{ fontSize: "1.8rem", fontWeight: "700" }}>
-                  ৳{totalCollected.toLocaleString()}
-                </div>
-              </div>
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "20px",
-                  background: "rgba(255, 255, 255, 0.1)",
-                  borderRadius: "15px",
-                  backdropFilter: "blur(20px)",
-                }}
-              >
-                <div
+                </h4>
+                <p
                   style={{
-                    fontSize: "0.9rem",
-                    opacity: "0.8",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Total Spent
-                </div>
-                <div style={{ fontSize: "1.8rem", fontWeight: "700" }}>
-                  ৳{totalSpent.toLocaleString()}
-                </div>
-              </div>
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "20px",
-                  background: "rgba(255, 255, 255, 0.1)",
-                  borderRadius: "15px",
-                  backdropFilter: "blur(20px)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "0.9rem",
-                    opacity: "0.8",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Remaining Balance
-                </div>
-                <div style={{ fontSize: "1.8rem", fontWeight: "700" }}>
-                  ৳{(totalCollected - totalSpent).toLocaleString()}
-                </div>
-              </div>
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "20px",
-                  background: "rgba(255, 255, 255, 0.1)",
-                  borderRadius: "15px",
-                  backdropFilter: "blur(20px)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "0.9rem",
-                    opacity: "0.8",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Meal Rate
-                </div>
-                <div style={{ fontSize: "1.8rem", fontWeight: "700" }}>
-                  ৳
-                  {daysSinceStart > 0
-                    ? (totalSpent / (2 * 9 * daysSinceStart)).toFixed(2)
-                    : "0"}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Shopping Section */}
-      <section
-        id="shopping"
-        style={{
-          ...sectionStyle,
-          background: "linear-gradient(135deg, #1a202c 0%, #2d3748 100%)",
-          color: "white",
-        }}
-      >
-        <div style={containerStyle}>
-          <div
-            className="fade-in"
-            style={{ textAlign: "center", marginBottom: "60px" }}
-          >
-            <h2
-              style={{
-                fontSize: "3rem",
-                fontWeight: "800",
-                marginBottom: "1rem",
-              }}
-            >
-              Shopping Dates
-            </h2>
-            <p style={{ fontSize: "1.2rem", opacity: "0.8" }}>
-              Upcoming Events & Special Dates
-            </p>
-          </div>
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <div style={{ width: "100%", maxWidth: "800px" }}>
-              <div
-                className="fade-in"
-                style={{
-                  background: "rgba(255, 255, 255, 0.1)",
-                  backdropFilter: "blur(20px)",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                  borderRadius: "20px",
-                  padding: "40px",
-                  transition: "all 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-10px)";
-                  e.currentTarget.style.background =
-                    "rgba(255, 255, 255, 0.15)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
-                }}
-              >
-                <h3
-                  style={{
-                    fontSize: "2rem",
+                    fontSize: "1.5rem",
                     fontWeight: "700",
-                    marginBottom: "30px",
-                    textAlign: "center",
+                    color: "#059669",
+                    margin: 0,
                   }}
                 >
-                  Upcoming Events
-                </h3>
-                <div style={{ listStyle: "none", padding: 0 }}>
-                  {[
-                    "🌞 Summer Sale - June 15-20",
-                    "⭐ Member Exclusive - July 5",
-                    "🍂 Fall Collection - August 12",
-                    "🎄 Holiday Special - December 1-24",
-                  ].map((event, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        padding: "15px 0",
-                        borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-                        transition: "all 0.3s ease",
-                        cursor: "pointer",
-                        fontSize: "1.1rem",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.paddingLeft = "15px";
-                        e.target.style.color = "#667eea";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.paddingLeft = "0";
-                        e.target.style.color = "white";
-                      }}
-                    >
-                      {event}
-                    </div>
-                  ))}
-                </div>
+                  ৳{totalCollected.toLocaleString()}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  padding: "20px",
+                  background: "#f8fafc",
+                  borderRadius: "12px",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: "2rem", marginBottom: "10px" }}>💸</div>
+                <h4 style={{ margin: "0 0 10px 0", color: "#374151" }}>
+                  Total Spent
+                </h4>
+                <p
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: "700",
+                    color: "#dc2626",
+                    margin: 0,
+                  }}
+                >
+                  ৳{totalSpent.toLocaleString()}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  padding: "20px",
+                  background: "f8fafc",
+                  borderRadius: "12px",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: "2rem", marginBottom: "10px" }}>⚖️</div>
+                <h4 style={{ margin: "0 0 10px 0", color: "#374151" }}>
+                  Current Balance
+                </h4>
+                <p
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: "700",
+                    color: "#2563eb",
+                    margin: 0,
+                  }}
+                >
+                  ৳{(totalCollected - totalSpent).toLocaleString()}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  padding: "20px",
+                  background: "#f8fafc",
+                  borderRadius: "12px",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: "2rem", marginBottom: "10px" }}>📅</div>
+                <h4 style={{ margin: "0 0 10px 0", color: "#374151" }}>
+                  Days Tracked
+                </h4>
+                <p
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: "700",
+                    color: "#7c3aed",
+                    margin: 0,
+                  }}
+                >
+                  {daysSinceStart}
+                </p>
               </div>
             </div>
           </div>
@@ -1036,48 +1158,31 @@ const Home = () => {
       {/* Footer */}
       <footer
         style={{
-          background: "#1a202c",
+          background: "#1e293b",
           color: "white",
-          padding: "60px 0 30px",
+          padding: isMobile ? "40px 0" : "60px 0",
           textAlign: "center",
         }}
       >
         <div style={containerStyle}>
-          <div className="fade-in">
-            <p style={{ fontSize: "1.1rem", marginBottom: "30px" }}>
-              © 2024 Kobitar House. All rights reserved.
-            </p>
-            <div
-              style={{ display: "flex", justifyContent: "center", gap: "30px" }}
-            >
-              {[
-                "fab fa-facebook-f",
-                "fab fa-twitter",
-                "fab fa-instagram",
-                "fab fa-linkedin-in",
-              ].map((icon, index) => (
-                <a
-                  key={index}
-                  href="#"
-                  style={{
-                    color: "white",
-                    fontSize: "1.5rem",
-                    transition: "all 0.3s ease",
-                    textDecoration: "none",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.color = "#667eea";
-                    e.target.style.transform = "translateY(-3px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.color = "white";
-                    e.target.style.transform = "translateY(0)";
-                  }}
-                >
-                  <i className={icon}></i>
-                </a>
-              ))}
-            </div>
+          <div
+            style={{
+              fontSize: isMobile ? "1.8rem" : "2.5rem",
+              fontWeight: "700",
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              marginBottom: "20px",
+            }}
+          >
+            ⭐ Kobitar House
+          </div>
+          <p style={{ marginBottom: "30px", opacity: "0.8" }}>
+            Premium Financial Management for Shared Living
+          </p>
+          <div style={{ opacity: "0.6", fontSize: "0.9rem" }}>
+            © {new Date().getFullYear()} Kobitar House. All rights reserved.
           </div>
         </div>
       </footer>
